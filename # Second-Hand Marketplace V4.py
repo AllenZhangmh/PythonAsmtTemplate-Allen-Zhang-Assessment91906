@@ -1,2 +1,0 @@
-# Second-Hand Marketplace V
-
