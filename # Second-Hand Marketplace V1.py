@@ -1,4 +1,5 @@
 # Second-Hand Marketplace V1
+#Product details added: new, good......
 
 print("Welcome to the Second-Hand Marketplace")
 
