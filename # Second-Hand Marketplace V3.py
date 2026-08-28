@@ -1,48 +1,164 @@
-# Second-Hand Marketplace V3
+# Second-Hand Marketplace V4 GUI
 
-print("Welcome to the Second-Hand Marketplace")
+import tkinter as tk
+from tkinter import messagebox
 
+# Platform charges a 5% fee when an item is sold
 FEE_RATE = 0.05
+
+# Store all items for sale
 marketplace = []
 
-while True:
+# MAIN PAGE
+def main_page():
 
-    print("\n--- Main Menu ---")
-    print("1. Sell an item")
-    print("2. Buy an item")
-    print("3. Search items")
-    print("4. View items")
-    print("5. Quit")
+    clear_page()
 
-    choice = input("Choose an option: ")
+    tk.Label(
+        window,
+        text="Second-Hand Marketplace",
+        font=("Arial", 22)
+    ).pack(pady=30)
 
-    # SELL
-    if choice == "1":
+    tk.Button(
+        window,
+        text="Sell an Item",
+        width=25,
+        command=sell_page
+    ).pack(pady=10)
 
-        item = input("\nEnter item name: ")
-        price = float(input("Enter original price ($): "))
-        condition = input("Enter condition (new/good/fair/poor): ").lower()
+    tk.Button(
+        window,
+        text="Buy / Search / View",
+        width=25,
+        command=market_page
+    ).pack(pady=10)
 
-        # Recommend a selling price
+    tk.Button(
+        window,
+        text="Quit",
+        width=25,
+        command=window.destroy
+    ).pack(pady=10)
+
+# SELL PAGE
+def sell_page():
+
+    clear_page()
+
+    tk.Label(
+        window,
+        text="Sell an Item",
+        font=("Arial", 20)
+    ).pack(pady=15)
+
+    tk.Label(window, text="Item Name").pack()
+
+    item_entry = tk.Entry(window)
+    item_entry.pack()
+
+    tk.Label(window, text="Original Price ($)").pack()
+
+    price_entry = tk.Entry(window)
+    price_entry.pack()
+
+    tk.Label(
+        window,
+        text="Condition (new/good/fair/poor)"
+    ).pack()
+
+    condition_entry = tk.Entry(window)
+    condition_entry.pack()
+
+    tk.Label(
+        window,
+        text="Your Own Selling Price ($)"
+    ).pack()
+
+    custom_price_entry = tk.Entry(window)
+    custom_price_entry.pack()
+
+    # Sell function
+    def sell():
+
+        item = item_entry.get()
+
+        try:
+            price = float(price_entry.get())
+        except ValueError:
+            messagebox.showerror(
+                "Error",
+                "Please enter a valid price."
+            )
+            return
+
+        condition = condition_entry.get().lower()
+
+        # Calculate recommended price
         if condition == "new":
-            sell_price = price * 0.8
+            recommended_price = price * 0.8
+
         elif condition == "good":
-            sell_price = price * 0.6
+            recommended_price = price * 0.6
+
         elif condition == "fair":
-            sell_price = price * 0.4
+            recommended_price = price * 0.4
+
         elif condition == "poor":
-            sell_price = price * 0.2
+            recommended_price = price * 0.2
+
         else:
-            print("Invalid condition. Please try again.")
-            continue
+            messagebox.showerror(
+                "Error",
+                "Invalid condition."
+            )
+            return
 
-        print("\nItem:", item)
-        print("Original Price: $", round(price, 2))
-        print("Recommended Selling Price: $", round(sell_price, 2))
+        # Ask seller about recommended price
+        accept = messagebox.askyesno(
+            "Recommended Price",
+            "Recommended Selling Price: $"
+            + str(round(recommended_price, 2))
+            + "\n\nDo you accept this price?"
+        )
 
-        confirm = input("Do you want to list this item? (yes/no): ").lower()
+        if accept:
 
-        if confirm == "yes":
+            sell_price = recommended_price
+
+        else:
+
+            try:
+                sell_price = float(
+                    custom_price_entry.get()
+                )
+
+                if sell_price <= 0:
+                    messagebox.showerror(
+                        "Error",
+                        "Selling price must be greater than 0."
+                    )
+                    return
+
+            except ValueError:
+
+                messagebox.showerror(
+                    "Error",
+                    "Please enter a valid price."
+                )
+                return
+
+        # Confirm listing
+        confirm = messagebox.askyesno(
+            "Confirm Listing",
+            "Item: " + item
+            + "\nFinal Selling Price: $"
+            + str(round(sell_price, 2))
+            + "\nCondition: " + condition
+            + "\n\nList this item?"
+        )
+
+        if confirm:
 
             marketplace.append({
                 "name": item,
@@ -50,126 +166,203 @@ while True:
                 "condition": condition
             })
 
-            print("Item listed successfully!")
-
-    # BUY
-    elif choice == "2":
-
-        if len(marketplace) == 0:
-            print("\nThere are no items available.")
-            continue
-
-        print("\n--- Items for Sale ---")
-
-        for i, item in enumerate(marketplace):
-            print(
-                i + 1,
-                item["name"],
-                "- $", round(item["price"], 2),
-                "-", item["condition"]
+            messagebox.showinfo(
+                "Success",
+                "Item listed successfully!"
             )
 
-        try:
-            item_number = int(input("Choose an item to buy: "))
+            item_entry.delete(0, tk.END)
+            price_entry.delete(0, tk.END)
+            condition_entry.delete(0, tk.END)
+            custom_price_entry.delete(0, tk.END)
 
-            if item_number < 1 or item_number > len(marketplace):
-                print("Invalid item number.")
-                continue
+    tk.Button(
+        window,
+        text="List Item",
+        width=20,
+        command=sell
+    ).pack(pady=15)
 
-            selected_item = marketplace[item_number - 1]
+    tk.Button(
+        window,
+        text="Back",
+        width=20,
+        command=main_page
+    ).pack()
 
-            price = selected_item["price"]
-            fee = price * FEE_RATE
-            seller_receives = price - fee
+# BUY / SEARCH / VIEW PAGE
+def market_page():
 
-            print("\nPurchase successful!")
-            print("Item:", selected_item["name"])
-            print("Price: $", round(price, 2))
-            print("Platform Fee (5%): $", round(fee, 2))
-            print("Seller receives: $", round(seller_receives, 2))
+    clear_page()
 
-            marketplace.pop(item_number - 1)
+    tk.Label(
+        window,
+        text="Buy / Search / View Items",
+        font=("Arial", 20)
+    ).pack(pady=15)
 
-        except ValueError:
-            print("Please enter a valid number.")
+    # Search
+    tk.Label(
+        window,
+        text="Search Item"
+    ).pack()
 
-    # SEARCH ITEMS
-    elif choice == "3":
+    search_entry = tk.Entry(window)
+    search_entry.pack()
 
-        if len(marketplace) == 0:
-            print("\nThere are no items for sale.")
-            continue
+    # Listbox
+    listbox = tk.Listbox(
+        window,
+        width=55,
+        height=10
+    )
 
-        search = input("\nEnter item name to search: ").lower()
+    listbox.pack(pady=10)
 
-        results = []
+    # Display all items
+    def view_items():
 
-        for i, item in enumerate(marketplace):
-            if search in item["name"].lower():
-                results.append((i, item))
-
-        if len(results) == 0:
-            print("No items found.")
-        else:
-            print("\n--- Search Results ---")
-
-            for number, item in results:
-                print(
-                    number + 1,
-                    item["name"],
-                    "- $", round(item["price"], 2),
-                    "-", item["condition"]
-                )
-
-            buy = input("\nDo you want to buy one of these items? (yes/no): ").lower()
-
-            if buy == "yes":
-
-                try:
-                    item_number = int(input("Enter the item number: "))
-
-                    if item_number < 1 or item_number > len(marketplace):
-                        print("Invalid item number.")
-                        continue
-
-                    selected_item = marketplace[item_number - 1]
-
-                    price = selected_item["price"]
-                    fee = price * FEE_RATE
-                    seller_receives = price - fee
-
-                    print("\nPurchase successful!")
-                    print("Item:", selected_item["name"])
-                    print("Price: $", round(price, 2))
-                    print("Platform Fee (5%): $", round(fee, 2))
-                    print("Seller receives: $", round(seller_receives, 2))
-
-                    marketplace.pop(item_number - 1)
-
-                except ValueError:
-                    print("Please enter a valid number.")
-
-    # VIEW ITEMS
-    elif choice == "4":
+        listbox.delete(0, tk.END)
 
         if len(marketplace) == 0:
-            print("\nThere are no items for sale.")
+
+            listbox.insert(
+                tk.END,
+                "There are no items for sale."
+            )
+
         else:
-            print("\n--- Items for Sale ---")
 
             for i, item in enumerate(marketplace):
-                print(
-                    i + 1,
-                    item["name"],
-                    "- $", round(item["price"], 2),
-                    "-", item["condition"]
+
+                listbox.insert(
+                    tk.END,
+                    str(i + 1)
+                    + ". "
+                    + item["name"]
+                    + " - $"
+                    + str(round(item["price"], 2))
+                    + " - "
+                    + item["condition"]
                 )
 
-    # QUIT
-    elif choice == "5":
-        print("\nThank you for using the marketplace!")
-        break
+    # Search items
+    def search_items():
 
+        listbox.delete(0, tk.END)
+
+        search = search_entry.get().lower()
+
+        for i, item in enumerate(marketplace):
+
+            if search in item["name"].lower():
+
+                listbox.insert(
+                    tk.END,
+                    str(i + 1)
+                    + ". "
+                    + item["name"]
+                    + " - $"
+                    + str(round(item["price"], 2))
+                    + " - "
+                    + item["condition"]
+                )
+
+    # Buy item
+    def buy_item():
+
+        selected = listbox.curselection()
+
+        if not selected:
+
+            messagebox.showerror(
+                "Error",
+                "Please select an item."
+            )
+            return
+
+        item_number = selected[0]
+
+        # Get selected item
+        selected_item = marketplace[item_number]
+
+        price = selected_item["price"]
+
+        # Calculate platform fee
+        fee = price * FEE_RATE
+
+        seller_receives = price - fee
+
+        confirm = messagebox.askyesno(
+            "Confirm Purchase",
+            "Item: " + selected_item["name"]
+            + "\nPrice: $" + str(round(price, 2))
+            + "\nPlatform Fee (5%): $"
+            + str(round(fee, 2))
+            + "\nSeller receives: $"
+            + str(round(seller_receives, 2))
+            + "\n\nBuy this item?"
+        )
+
+        if confirm:
+
+            marketplace.pop(item_number)
+
+            messagebox.showinfo(
+                "Purchase Successful",
+                "Purchase successful!"
+            )
+
+            view_items()
+
+    # Buttons
+    tk.Button(
+        window,
+        text="Search",
+        width=15,
+        command=search_items
+    ).pack(pady=5)
+
+    tk.Button(
+        window,
+        text="View All Items",
+        width=15,
+        command=view_items
+    ).pack(pady=5)
+
+    tk.Button(
+        window,
+        text="Buy Selected Item",
+        width=15,
+        command=buy_item
+    ).pack(pady=5)
+
+    tk.Button(
+        window,
+        text="Back",
+        width=15,
+        command=main_page
+    ).pack(pady=10)
+
+    # Show items when page opens
+    view_items()
+
+# CLEAR PAGE
+def clear_page():
+
+    for widget in window.winfo_children():
+        widget.destroy()
+
+# WINDOW
+window = tk.Tk()
+
+window.title("Second-Hand Marketplace")
+
+window.geometry("550x600")
+
+main_page()
+
+window.mainloop()
     else:
         print("Invalid choice. Please try again.")
 
